@@ -1,11 +1,11 @@
 <script setup>
-import { reactive } from 'vue';
+import axios from 'axios';
+import { reactive, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useVuelidate } from '@vuelidate/core'
-import { required } from '@vuelidate/validators'
+import { required, email, sameAs, minLength } from '@vuelidate/validators'
 
 const router = useRouter()
-
 const userForm = reactive({
     fname: "",
     lname: "",
@@ -15,14 +15,16 @@ const userForm = reactive({
     phone: "",
     address: "",
 });
+
 const rules = computed(() => {
-    return {fname: { required },
-    lname: { required },
-    email: { required },
-    password: { required },
-    password_confirmation: { required },
-    phone: { required },
-    address: { required },
+    return {
+        fname: { required },
+        lname: { required },
+        email: { required, email },
+        password: { required, minLength: minLength(4) },
+        password_confirmation: { required, sameAs: sameAs(userForm.password) },
+        phone: { required },
+        address: { required },
     }
 })
 
@@ -36,10 +38,24 @@ const submitForm = async () => {
     const result = await v$.value.$validate()
     if (result) {
         alert("Success, form submited!")
-    } else {
-        alert("error, form submited!")
-    }
+        let result = await axios.post('http://localhost:3000/users', {
+            fname: userForm.fname,
+            lname: userForm.lname,
+            email: userForm.email,
+            password: userForm.password,
+            password_confirmation: userForm.password_confirmation,
+            phone: userForm.phone,
+            address: userForm.address,
+        })
 
+        if (result.status == 201) {
+            console.log("ลงทะเบียนเรียบร้อยแล้วครับ")
+        } else {
+            console.log("ลงทะเบียนไม่เรียบร้อยแล้วครับ")
+        }
+    } else {
+        alert("Error, form submited!")
+    }
 }
 
 </script>
@@ -72,7 +88,7 @@ const submitForm = async () => {
                                 <input type="text" class="form-control" required v-model="userForm.fname"
                                     placeholder="ชื่อผู้สมัคร">
                             </div>
-                            <span class="text-danger" v-for="error in v$.fname.$errors" :key="error.$uid">
+                            <span class="text-danger" v-for="error in v$.fname.$errors" :key="error.$id">
                                 {{ error.$message }}
                             </span>
 
@@ -114,8 +130,8 @@ const submitForm = async () => {
 
                             <div class="mb-2">
                                 <label for="" class="form-label">โทรศัพท์</label>
-                                <input type="text" class="form-control" v-model="userForm.phone" 
-                                    placeholder="เบอร์โทรศัพท์" required>
+                                <input type="text" class="form-control" v-model="userForm.phone" placeholder="เบอร์โทรศัพท์"
+                                    required>
                             </div>
                             <span class="text-danger" v-for="error in v$.phone.$errors" :key="error.$uid">
                                 {{ error.$message }}
