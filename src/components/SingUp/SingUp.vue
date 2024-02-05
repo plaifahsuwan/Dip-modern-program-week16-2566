@@ -1,20 +1,45 @@
 <script setup>
 import { reactive } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRouter } from 'vue-router';
+import { useVuelidate } from '@vuelidate/core'
+import { required } from '@vuelidate/validators'
 
-const router = useRoute()
+const router = useRouter()
 
 const userForm = reactive({
     fname: "",
     lname: "",
     email: "",
     password: "",
+    password_confirmation: "",
     phone: "",
     address: "",
 });
+const rules = computed(() => {
+    return {fname: { required },
+    lname: { required },
+    email: { required },
+    password: { required },
+    password_confirmation: { required },
+    phone: { required },
+    address: { required },
+    }
+})
+
+const v$ = useVuelidate(rules, userForm)
 
 function SignInPage() {
     router.push({ name: "signin" })
+}
+
+const submitForm = async () => {
+    const result = await v$.value.$validate()
+    if (result) {
+        alert("Success, form submited!")
+    } else {
+        alert("error, form submited!")
+    }
+
 }
 
 </script>
@@ -47,32 +72,66 @@ function SignInPage() {
                                 <input type="text" class="form-control" required v-model="userForm.fname"
                                     placeholder="ชื่อผู้สมัคร">
                             </div>
+                            <span class="text-danger" v-for="error in v$.fname.$errors" :key="error.$uid">
+                                {{ error.$message }}
+                            </span>
+
                             <div class="mb-2">
                                 <label for="" class="form-label">นามสกุล</label>
                                 <input type="text" class="form-control" v-model="userForm.lname"
                                     placeholder="นามสกุลผู้สมัคร" required>
                             </div>
+                            <span class="text-danger" v-for="error in v$.lname.$errors" :key="error.$uid">
+                                {{ error.$message }}
+                            </span>
+
                             <div class="mb-2">
                                 <label for="" class="form-label">อีเมลล์</label>
                                 <input type="email" class="form-control" v-model="userForm.email"
                                     placeholder="อีเมลล์ผู้สมัคร" required>
                             </div>
+                            <span class="text-danger" v-for="error in v$.email.$errors" :key="error.$uid">
+                                {{ error.$message }}
+                            </span>
+
                             <div class="mb-2">
                                 <label for="" class="form-label">รหัสผ่าน</label>
                                 <input type="password" class="form-control" v-model="userForm.password"
                                     placeholder="รหัสผ่านผู้สมัคร" required>
                             </div>
+                            <span class="text-danger" v-for="error in v$.password.$errors" :key="error.$uid">
+                                {{ error.$message }}
+                            </span>
+
+                            <div class="mb-2">
+                                <label for="" class="form-label">ยืนยันรหัสผ่าน</label>
+                                <input type="password" class="form-control" v-model="userForm.password_confirmation"
+                                    placeholder="ยืนยันรหัสผ่านผู้สมัคร" required>
+                            </div>
+                            <span class="text-danger" v-for="error in v$.password_confirmation.$errors" :key="error.$uid">
+                                {{ error.$message }}
+                            </span>
+
                             <div class="mb-2">
                                 <label for="" class="form-label">โทรศัพท์</label>
-                                <input type="text" class="form-control" v-model="userForm.phone" placeholder="เบอร์โทรศัพท์"
-                                    required>
+                                <input type="text" class="form-control" v-model="userForm.phone" 
+                                    placeholder="เบอร์โทรศัพท์" required>
                             </div>
+                            <span class="text-danger" v-for="error in v$.phone.$errors" :key="error.$uid">
+                                {{ error.$message }}
+                            </span>
+
                             <div class="mb-2">
                                 <label for="" class="form-label">ที่อยู่:</label>
                                 <textarea v-model="userForm.address" cols="51" rows="2"></textarea>
                             </div>
+
+                            <span class="text-danger" v-for="error in v$.address.$errors" :key="error.$uid">
+                                {{ error.$message }}
+                            </span>
+
                             <div class="mb-2">
-                                <p type="submit" class="btn btn-primary shadow d-block">สมัครสมาชิก</p>
+                                <p type="submit" @click="submitForm" class="btn btn-primary shadow d-block">สมัครสมาชิก</p>
                                 <p @click="SignInPage" class="text-body text-center d-block">
                                     Already have an Account?
                                     <router-link :to="{ name: 'signin' }" class="text-decoration-none font-weight-bold">
